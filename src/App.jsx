@@ -10,6 +10,7 @@ function App() {
 
   const meRef = useRef({
     id: null,
+    name: "user",
   });
 
   const droneRef = useRef(null);
@@ -38,7 +39,7 @@ function App() {
   const sendMessage = (event) => {
     event.preventDefault();
     if (input && currentUser && droneRef.current) {
-      const message = { sender: currentUser.id, content: input };
+      const message = { sender: currentUser.name, content: input };
       droneRef.current.publish({
         room: "observable-room",
         message: message,
@@ -50,13 +51,13 @@ function App() {
     }
   };
 
-  const addUser = (event) => {
+  const updateUsername = (event) => {
     event.preventDefault();
     if (newName) {
       setUsers([...users, { id: newName, name: newName }]);
       setNewName("");
-      if (!currentUser) {
-        setCurrentUser({ id: newName, name: newName });
+      if (currentUser) {
+        setCurrentUser({ ...currentUser, name: newName });
       }
     }
   };
@@ -70,14 +71,15 @@ function App() {
           </div>
         ))}
       </div>
-      <form onSubmit={addUser}>
+
+      <form onSubmit={updateUsername}>
         <input
           type="text"
-          placeholder="Name"
+          placeholder="Choose a username"
           value={newName}
           onChange={(event) => setNewName(event.target.value)}
         />
-        <button type="submit">Login</button>
+        <button type="submit">Update Username</button>
       </form>
 
       {currentUser && (
