@@ -31,7 +31,7 @@ function App() {
   const onSendMessage = (message) => {
     if (droneRef.current) {
       droneRef.current.publish({
-        room: "observable-room",
+        room: "MyApp1",
         message: {
           text: message,
           sender: currentUser.name,
