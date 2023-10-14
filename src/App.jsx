@@ -1,3 +1,4 @@
+import "./App.css";
 import { useState, useEffect, useRef } from "react";
 
 function App() {
@@ -7,40 +8,64 @@ function App() {
   const [newName, setNewName] = useState("");
   const [currentUser, setCurrentUser] = useState(null);
 
+  const meRef = useRef({
+    id: null,
+    name: "user",
+  });
+
   const droneRef = useRef(null);
+  const roomRef = useRef(null);
 
   function connectToScaledrone() {
-    const drone = new window.Scaledrone("IbUarokoT6VdaC7h");
+    const drone = new window.Scaledrone("IbUarokoT6VdaC7h", {
+      data: meRef.current,
+    });
 
     drone.on("open", (error) => {
       if (error) {
         return console.error(error);
       }
 
-      const randomUsername = "user" + Math.floor(Math.random() * 1000);
-      setCurrentUser({ name: randomUsername });
+      meRef.current.id = drone.clientId;
+      setCurrentUser(meRef.current);
     });
 
     droneRef.current = drone;
+
+    roomRef.current = drone.subscribe("observable-room");
+
+    roomRef.current.on("message", (message) => {
+      setMessages((prevMessages) => [...prevMessages, message]);
+    });
   }
 
   useEffect(() => {
     connectToScaledrone();
   }, []);
 
-  const onSendMessage = (message) => {
-    if (droneRef.current) {
+  const sendMessage = (event) => {
+    event.preventDefault();
+    if (input && currentUser && droneRef.current) {
+      const message = { sender: currentUser.name, content: input };
       droneRef.current.publish({
-        room: "MyApp1",
-        message: {
-          text: message,
-          sender: currentUser.name,
-        },
+        room: "observable-room",
+        message: message,
       });
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { text: message, sender: currentUser.name },
-      ]);
+      setMessages([...messages, message]);
+      setInput("");
+    } else {
+      alert("Please select a user and write a message");
+    }
+  };
+
+  const updateUsername = (event) => {
+    event.preventDefault();
+    if (newName) {
+      setUsers([...users, { id: newName, name: newName }]);
+      setNewName("");
+      if (currentUser) {
+        setCurrentUser({ ...currentUser, name: newName });
+      }
     }
   };
 
@@ -54,39 +79,20 @@ function App() {
         ))}
       </div>
 
-      <form onSubmit={(event) => event.preventDefault()}>
+      <form onSubmit={updateUsername}>
         <input
           type="text"
           placeholder="Choose a username"
           value={newName}
           onChange={(event) => setNewName(event.target.value)}
         />
-        <button
-          type="button"
-          onClick={() => {
-            if (newName) {
-              setUsers([...users, { id: newName, name: newName }]);
-              setNewName("");
-              setCurrentUser({ name: newName });
-            }
-          }}
-        >
-          Update Username
-        </button>
+        <button type="submit">Update Username</button>
       </form>
 
       {currentUser && (
         <div>
           <p>Logged in as: {currentUser.name}</p>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (input) {
-                onSendMessage(input);
-                setInput("");
-              }
-            }}
-          >
+          <form onSubmit={sendMessage}>
             <input
               type="text"
               value={input}
@@ -98,7 +104,7 @@ function App() {
           <div>
             {messages.map((message, index) => (
               <p key={index}>
-                {message.sender}: {message.text}
+                {message.sender}: {message.content}
               </p>
             ))}
           </div>
