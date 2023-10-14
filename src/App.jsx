@@ -2,69 +2,46 @@ import "./App.css";
 import { useState } from "react";
 
 function App() {
-  const [users, setUsers] = useState([
-    {
-      name: "Toma",
-      password: "toma123",
-    },
-    {
-      name: "Kizo",
-      password: "kizo123",
-    },
-  ]);
+  const [users, setUsers] = useState([]);
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [newName, setNewName] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [currentUser, setCurrentUser] = useState(null);
-  const [recipient, setRecipient] = useState(null);
 
   const sendMessage = (event) => {
     event.preventDefault();
-    if (input && currentUser && recipient) {
-      setMessages([
-        ...messages,
-        { sender: currentUser.name, recipient: recipient, content: input },
-      ]);
+    if (input && currentUser) {
+      setMessages([...messages, { sender: currentUser.name, content: input }]);
       setInput("");
     } else {
-      alert("Please select a user and recepient and write a message");
+      alert("Please select a user and write a message");
     }
   };
 
-  const addNewUser = (event) => {
+  const addUser = (event) => {
     event.preventDefault();
     if (newName && newPassword) {
-      setUsers([...users, { name: newName, password: newPassword }]);
-
+      const newUser = { name: newName, password: newPassword };
+      setUsers([...users, newUser]);
       setNewName("");
       setNewPassword("");
+
+      setCurrentUser(newUser);
     }
   };
 
-  const selectUser = (user) => {
-    setCurrentUser(user);
-
-    // Postavljam automatski primatelja jer nezz zakaj bez toga nece radit dok su samo dva
-    const otherUsers = users.filter((u) => u.name !== user.name);
-    if (otherUsers.length === 1) {
-      setRecipient(otherUsers[0].name);
-    } else {
-      setRecipient(null);
-    }
-  };
   return (
     <>
       <div>
         {users.map((user, index) => (
-          <div key={index}>
+          <div key={index} onClick={() => setCurrentUser(user)}>
             <p>{user.name}</p>
-            <button onClick={() => selectUser(user)}>Send a message</button>
           </div>
         ))}
       </div>
-      <form onSubmit={addNewUser}>
+      <form onSubmit={addUser}>
         <input
           type="text"
           placeholder="Name"
@@ -77,22 +54,12 @@ function App() {
           value={newPassword}
           onChange={(event) => setNewPassword(event.target.value)}
         />
-        <button type="submit">Add user</button>
+        <button type="submit">Login</button>
       </form>
-
       <div>
-        {currentUser && ( //zapamti kaj su truthy i falsy values, kad je currentUser truthy znaci da je selected
+        {currentUser && (
           <div>
             <p>Logged in as: {currentUser.name}</p>
-            <select onChange={(event) => setRecipient(event.target.value)}>
-              {users
-                .filter((user) => user.name !== currentUser.name)
-                .map((user) => (
-                  <option key={user.name} value={user.name}>
-                    {user.name}
-                  </option>
-                ))}
-            </select>
             <form onSubmit={sendMessage}>
               <input
                 type="text"
@@ -105,7 +72,7 @@ function App() {
             <div>
               {messages.map((message, index) => (
                 <p key={index}>
-                  {message.sender} to {message.recipient} : {message.content}
+                  {message.sender}: {message.content}
                 </p>
               ))}
             </div>
