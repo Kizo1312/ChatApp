@@ -51,7 +51,7 @@ function App() {
         room: "observable-room",
         message: message,
       });
-      setMessages([...messages, message]);
+      setMessages((prevMessages) => [...prevMessages, message]);
       setInput("");
     } else {
       alert("Please select a user and write a message");
@@ -70,7 +70,7 @@ function App() {
   };
 
   return (
-    <>
+    <div className="container">
       <div>
         {users.map((user) => (
           <div key={user.id}>
@@ -110,7 +110,7 @@ function App() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
